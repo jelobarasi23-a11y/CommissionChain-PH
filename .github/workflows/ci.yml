@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Soroban contract tests ────────────────────────────────────────────────
+  contract-tests:
+    name: Contract tests (cargo test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: wasm32v1-none
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/referral/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/referral/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Run contract tests
+        working-directory: contracts/referral
+        run: cargo test
+
+      - name: Build contract WASM
+        working-directory: contracts/referral
+        run: |
+          cargo install stellar-cli --locked || true
+          stellar contract build
+
+  # ── Next.js web app build + lint ─────────────────────────────────────────
+  web-build:
+    name: Web app build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Type-check
+        working-directory: web
+        run: npx tsc --noEmit
+
+      - name: Run frontend tests
+        working-directory: web
+        run: npm test -- --run
+
+      - name: Build
+        working-directory: web
+        env:
+          # Dummy values so Next.js can build without real credentials
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SECRET_KEY: sb_secret_placeholder
+          NEXT_PUBLIC_STELLAR_NETWORK: TESTNET
+          NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE: "Test SDF Network ; September 2015"
+          NEXT_PUBLIC_HORIZON_URL: https://horizon-testnet.stellar.org
+          NEXT_PUBLIC_SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+          NEXT_PUBLIC_REFERRAL_CONTRACT_ID: CPLACEHOLDERPLACEHOLDERPLACEHOLDERPLACEHOLDERPLACEHOLDER
+          NEXT_PUBLIC_COMMISSION_TOKEN_ID: CPLACEHOLDERPLACEHOLDERPLACEHOLDERPLACEHOLDERPLACEHOLDER
+        run: npm run build
