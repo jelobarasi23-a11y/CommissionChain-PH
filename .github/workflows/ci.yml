@@ -37,9 +37,7 @@ jobs:
 
       - name: Build contract WASM
         working-directory: contracts/referral
-        run: |
-          cargo install stellar-cli --locked || true
-          stellar contract build
+        run: cargo build --release --target wasm32v1-none
 
   # ── Next.js web app build + lint ─────────────────────────────────────────
   web-build:
