@@ -131,17 +131,23 @@ export async function disconnectWallet(): Promise<void> {
  * or "0" if the account has no native balance entry (shouldn't happen
  * for any funded account, but is a safe default).
  */
+/**
+ * Fetch the connected account's native XLM balance via our own
+ * /api/network/balance route rather than calling Horizon directly from
+ * the browser — see that route for why (CORS on Stellar's public
+ * endpoints doesn't reliably allow arbitrary production origins, even
+ * though it happens to work from localhost during local development).
+ * Returns "0" on any failure, same as the route's own graceful fallback.
+ */
 export async function fetchXlmBalance(publicKey: string): Promise<string> {
-  const horizonUrl =
-    typeof process !== "undefined"
-      ? process.env.NEXT_PUBLIC_HORIZON_URL ?? "https://horizon-testnet.stellar.org"
-      : "https://horizon-testnet.stellar.org";
-
-  const res = await fetch(`${horizonUrl}/accounts/${publicKey}`);
-  if (!res.ok) return "0";
-  const data: { balances?: { asset_type: string; balance: string }[] } = await res.json();
-  const native = data.balances?.find((b) => b.asset_type === "native");
-  return native?.balance ?? "0";
+  try {
+    const res = await fetch(`/api/network/balance?address=${encodeURIComponent(publicKey)}`);
+    if (!res.ok) return "0";
+    const data: { balance?: string } = await res.json();
+    return data.balance ?? "0";
+  } catch {
+    return "0";
+  }
 }
 
 // ── Albedo wallet ─────────────────────────────────────────────────────────────

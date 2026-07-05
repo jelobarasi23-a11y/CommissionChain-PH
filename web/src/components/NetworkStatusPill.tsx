@@ -5,23 +5,15 @@ import { cn } from "@/lib/utils";
 
 type Status = "checking" | "online" | "slow" | "offline";
 
-const RPC_URL =
-  typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_SOROBAN_RPC_URL ?? "https://soroban-testnet.stellar.org"
-    : "https://soroban-testnet.stellar.org";
-
 async function pingRpc(): Promise<{ status: Status; ms: number }> {
-  const start = performance.now();
   try {
-    const res = await fetch(RPC_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getHealth" }),
-      signal: AbortSignal.timeout(5000),
-    });
-    const ms = Math.round(performance.now() - start);
-    if (!res.ok) return { status: "offline", ms };
-    return { status: ms > 2000 ? "slow" : "online", ms };
+    // Calls our own /api/network/health route, which does the actual
+    // Soroban RPC ping server-side — see that route for why this can't
+    // be a direct browser-to-Stellar fetch (CORS).
+    const res = await fetch("/api/network/health", { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return { status: "offline", ms: 0 };
+    const data: { status: Status; ms: number } = await res.json();
+    return data;
   } catch {
     return { status: "offline", ms: 0 };
   }
