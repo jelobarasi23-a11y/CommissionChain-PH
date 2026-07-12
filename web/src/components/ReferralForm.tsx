@@ -24,14 +24,8 @@ export function ReferralForm() {
   const [stage, setStage]         = React.useState<TxStage>("building");
   const [txError, setTxError]     = React.useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-
-    if (!address) {
-      setError("Connect your wallet first — the referral is submitted as the connected agent.");
-      return;
-    }
+  async function submitReferral() {
+    if (!address) return;
 
     const shared = {
       agentPublicKey: address,
@@ -72,6 +66,25 @@ export function ReferralForm() {
       setTxError(err instanceof Error ? err.message : "Something went wrong submitting the referral.");
       setStage("error");
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!address) {
+      setError("Connect your wallet first — the referral is submitted as the connected agent.");
+      return;
+    }
+
+    await submitReferral();
+  }
+
+  // Retry replays the exact same submission — form fields are never
+  // cleared on error (only on success, right before the redirect), so
+  // whatever the person typed is still sitting in state, ready to resend.
+  async function handleRetry() {
+    await submitReferral();
   }
 
   return (
@@ -168,6 +181,7 @@ export function ReferralForm() {
         title="Recording your referral"
         errorMessage={txError}
         onClose={() => setOverlayOpen(false)}
+        onRetry={handleRetry}
       />
     </>
   );

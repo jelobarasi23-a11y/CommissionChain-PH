@@ -24,29 +24,8 @@ export default function SendXlmPage() {
   const [txHash, setTxHash]           = React.useState<string | null>(null);
   const [refreshing, setRefreshing]   = React.useState(false);
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setTxHash(null);
-
-    if (!address) {
-      setError("Connect your wallet first.");
-      return;
-    }
-
-    const parsedAmt = parseFloat(amount);
-    if (!Number.isFinite(parsedAmt) || parsedAmt <= 0) {
-      setError("Enter a valid amount greater than 0.");
-      return;
-    }
-    if (!/^G[A-Z2-7]{55}$/.test(destination)) {
-      setError("Enter a valid Stellar public key (starts with G, 56 characters).");
-      return;
-    }
-    if (destination === address) {
-      setError("You can't send XLM to yourself.");
-      return;
-    }
+  async function sendXlmPayment() {
+    if (!address) return;
 
     setOverlayOpen(true);
     setStage("building");
@@ -85,6 +64,40 @@ export default function SendXlmPage() {
       setTxError(err instanceof Error ? err.message : "Something went wrong sending XLM.");
       setStage("error");
     }
+  }
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setTxHash(null);
+
+    if (!address) {
+      setError("Connect your wallet first.");
+      return;
+    }
+
+    const parsedAmt = parseFloat(amount);
+    if (!Number.isFinite(parsedAmt) || parsedAmt <= 0) {
+      setError("Enter a valid amount greater than 0.");
+      return;
+    }
+    if (!/^G[A-Z2-7]{55}$/.test(destination)) {
+      setError("Enter a valid Stellar public key (starts with G, 56 characters).");
+      return;
+    }
+    if (destination === address) {
+      setError("You can't send XLM to yourself.");
+      return;
+    }
+
+    await sendXlmPayment();
+  }
+
+  // Retry replays the exact same payment — destination and amount are
+  // only cleared on success, so on an error they're still exactly the
+  // values that already passed validation the first time around.
+  async function handleRetry() {
+    await sendXlmPayment();
   }
 
   async function handleRefreshBalance() {
@@ -260,6 +273,7 @@ export default function SendXlmPage() {
         title="Sending XLM"
         errorMessage={txError}
         onClose={() => setOverlayOpen(false)}
+        onRetry={handleRetry}
       />
     </>
   );
