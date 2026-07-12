@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from("referrals")
       .select(REFERRAL_SELECT)
+      .eq("contract_id", process.env.NEXT_PUBLIC_REFERRAL_CONTRACT_ID ?? "")
       .order("created_at", { ascending: false })
       .order("created_at", { foreignTable: "transactions", ascending: false });
 

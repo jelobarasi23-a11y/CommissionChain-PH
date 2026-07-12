@@ -59,9 +59,19 @@ create index businesses_public_key_idx on businesses (public_key);
 -- Soroban contract's create_referral call and is how this row stays in
 -- sync with on-chain state — every status change here should correspond
 -- to a transaction recorded against this referral's on-chain id.
+--
+-- on_chain_id is only unique *within* one deployed contract instance, not
+-- globally — a fresh `stellar contract deploy` resets a contract's own id
+-- sequence back to 0, so contract_id + on_chain_id together (not
+-- on_chain_id alone) is what's actually unique. Every route that reads or
+-- writes a referral by on_chain_id also filters by the currently
+-- configured NEXT_PUBLIC_REFERRAL_CONTRACT_ID, so a redeploy can never
+-- collide with or accidentally act on a referral from a previous
+-- deployment.
 create table referrals (
   id text primary key default gen_random_uuid()::text,
-  on_chain_id integer not null unique,
+  contract_id text not null,
+  on_chain_id integer not null,
   client_name text not null,
   business_name text not null,
   commission_amount numeric(18, 7) not null,
@@ -70,7 +80,8 @@ create table referrals (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   agent_id text not null references users (id),
-  business_id text not null references businesses (id)
+  business_id text not null references businesses (id),
+  unique (contract_id, on_chain_id)
 );
 create index referrals_agent_id_idx on referrals (agent_id);
 create index referrals_business_id_idx on referrals (business_id);

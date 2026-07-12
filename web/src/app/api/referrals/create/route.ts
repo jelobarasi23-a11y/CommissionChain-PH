@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       const { data: inserted, error: insertError } = await supabase
         .from("referrals")
         .insert({
+          contract_id: process.env.NEXT_PUBLIC_REFERRAL_CONTRACT_ID ?? "",
           on_chain_id: onChainId,
           client_name: clientName,
           business_name: businessName,

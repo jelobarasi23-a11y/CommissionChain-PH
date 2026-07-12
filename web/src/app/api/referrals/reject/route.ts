@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
     const { data: referral, error: findError } = await supabase
       .from("referrals")
       .select("id, status")
+      .eq("contract_id", process.env.NEXT_PUBLIC_REFERRAL_CONTRACT_ID ?? "")
       .eq("on_chain_id", onChainId)
       .single();
     if (findError || !referral) {
