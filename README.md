@@ -8,6 +8,8 @@ freelance sales agents, built on Stellar and Soroban.
 > professionally audited, and must not be pointed at mainnet funds without
 > one first.
 
+**🔗 Live demo:** [commissionchain-ph.vercel.app](https://commissionchain-ph.vercel.app)
+
 ## The problem
 
 Insurance agencies, real-estate brokerages, recruitment firms, solar
@@ -263,16 +265,16 @@ considering any production use.
 
 | Contract | Address |
 |---|---|
-| Referral escrow contract | `CBUXDZ34FE6KSGQL3O3NKUHSEPXXYTHGM3TCJM5LL5O3QBG55W33KMGZ` |
+| Referral escrow contract | `CBBDNGISC7AKMP6U533NXRUHH66XZDIVZ32XOFZED7IK67O5HKQPWMVD` |
 | USDC Stellar Asset Contract (SAC) | `CBS6ZLQB4ZICVF4UJCHCTD3VBGZANVY3BA7BLFGA66RCJXTS3BUDIL3M` |
 
-### Sample transaction hashes (Stellar Testnet)
-
-| Action | Transaction hash |
-|---|---|
-| create_referral | [5faa…70db](https://stellar.expert/explorer/testnet/tx/5faa70db) |
-| approve_referral (escrow) | [4ff6…e90d](https://stellar.expert/explorer/testnet/tx/4ff6e90d) |
-| claim_commission (payout) | [edb5…4e8e](https://stellar.expert/explorer/testnet/tx/edb54e8e) |
+> This contract was redeployed partway through development to pick up the
+> event-emitting code added for the real-time events feature (see
+> [Real-time contract events](#real-time-contract-events) below) — Soroban
+> contracts are immutable, so only transactions run *after* a redeploy can
+> emit the new events. For live, verifiable transaction proof against this
+> exact deployment, see screenshot 8 below, or click any referral's
+> "View proof" link directly in the running app.
 
 ---
 
@@ -309,6 +311,32 @@ After the business approves and the agent claims, the referral shows Settled sta
 ![Wallet picker modal showing Freighter and Albedo options](docs/screenshots/10-multi-wallet-selector.png)
 
 Clicking **Connect Wallet** opens a centered modal showing both supported wallets — Freighter (browser extension) and Albedo (web-based, no install required). The modal is rendered via React Portal so it appears correctly above all page content regardless of stacking context.
+
+### 6. Mobile-responsive layout (Level 3)
+
+![CommissionChain PH dashboard on a mobile phone](docs/screenshots/12-mobile-view.png)
+
+The dashboard on an actual phone (Chrome for Android), not a resized desktop window — sidebar collapses to a hamburger menu, stat cards and buttons reflow to a single column.
+
+### 7. CI/CD pipeline passing (Level 3)
+
+![GitHub Actions run showing both jobs passing, with the Vitest test report inline](docs/screenshots/13-ci-cd-passing-with-tests.png)
+
+Both CI jobs green on push — **Contract tests (cargo test)** and **Web app build**. The build job's summary also surfaces the full Vitest report inline: **25/25 tests passing** across 3 test files, giving this one screenshot double duty as both the CI/CD proof and the frontend test-results proof.
+
+### 8. Live on-chain event feed — all three referral lifecycle events
+
+![On-chain events panel showing Referral submitted, Commission escrowed, and Commission paid out events, each with a real ledger number](docs/screenshots/14-live-events-populated.png)
+
+One referral (Maria Santos, on-chain id `#2`), taken through its full lifecycle — submitted, approved, claimed — with the **On-chain events** panel catching all three as they happened: **Referral submitted**, **Commission escrowed**, and **Commission paid out**, each tagged with a real Stellar ledger number (3,524,716 / 3,524,759 / 3,524,767) and a live relative timestamp. This confirms the full chain end to end: the deployed contract genuinely emits an event at every stage, and the dashboard's 15-second poll against Soroban RPC genuinely catches each one without a page refresh.
+
+---
+
+### 9. Contract test suite passing
+
+![Terminal output of cargo test showing all 5 tests passing](docs/screenshots/15-cargo-test-passing.png)
+
+`cargo test` run against the deployed contract's source — all 5 required tests (`test_storage_verification`, `test_approval_status_verification`, `test_duplicate_claim`, `test_happy_path`, `test_unauthorized_approval`) pass cleanly: `5 passed; 0 failed`.
 
 ---
 
@@ -390,99 +418,3 @@ without a page refresh.
 
 It builds, runs the test suite, deploys, initializes, and prints the
 `NEXT_PUBLIC_REFERRAL_CONTRACT_ID` value ready to paste into `web/.env`.
-
----
-
-## Pushing this project to GitHub
-
-This project has never been pushed to a Git repository — do that before
-submitting. Two things matter here: making sure secrets never get
-committed, and building a real, incremental commit history rather than
-one giant "final" commit.
-
-### 1. Initialize Git and verify `.env` is excluded
-
-```bash
-cd commissionchain-ph
-git init
-git status
-```
-
-`web/.env` should **not** appear in the output — `.gitignore` already
-excludes it. If you ever see it listed, stop and fix `.gitignore` before
-continuing; that file holds your Supabase secret key and should never
-reach a public repository. (`web/.env.example` — the template with
-placeholder values — is fine to commit and already tracked.)
-
-### 2. Commit incrementally, not as one block
-
-A single "final commit" reads as a red flag to reviewers regardless of
-code quality — it suggests the work wasn't actually built over time. Stage
-and commit in logical chunks instead:
-
-```bash
-git add contracts/
-git commit -m "feat: Soroban referral escrow contract with 5 passing tests"
-
-git add web/src/lib/ web/src/components/ui/ web/package.json
-git commit -m "feat: Next.js scaffold, wallet integration, Supabase client"
-
-git add web/src/app/ web/src/components/ReferralForm.tsx web/src/components/ReferralTable.tsx
-git commit -m "feat: referral submission, approval, and claim flow"
-
-git add web/src/components/WalletSelectModal.tsx web/src/lib/wallet.ts
-git commit -m "feat: multi-wallet support (Freighter + Albedo)"
-
-git add web/src/lib/events.ts web/src/components/ContractEventFeed.tsx contracts/referral/src/lib.rs
-git commit -m "feat: Soroban contract events + live event feed"
-
-git add web/src/app/xlm/ web/src/app/api/xlm/
-git commit -m "feat: classic XLM payment flow and balance display"
-
-git add web/src/lib/__tests__/ web/src/components/__tests__/ web/vitest.config.ts
-git commit -m "test: frontend test suite (25 tests, Vitest + RTL)"
-
-git add .github/workflows/
-git commit -m "ci: GitHub Actions workflow for contract tests and web build"
-
-git add scripts/
-git commit -m "chore: automated deployment script"
-
-git add docs/ README.md
-git commit -m "docs: architecture, walkthrough, deployment guide, screenshots"
-```
-
-(Adjust groupings to match what you actually have staged — `git status`
-before each commit to confirm.)
-
-### 3. Create the GitHub repository and push
-
-```bash
-git branch -M main
-```
-
-Create an empty repository at [github.com/new](https://github.com/new) —
-**do not** initialize it with a README, since you already have one — then:
-
-```bash
-git remote add origin https://github.com/<your-username>/commissionchain-ph.git
-git push -u origin main
-```
-
-### 4. Make the repository public
-
-If you created it as private, go to the repo's **Settings → General →
-Danger Zone → Change visibility → Make public**.
-
-### 5. Verify before submitting
-
-- [ ] Repository is public
-- [ ] `web/.env` does not appear anywhere in the repo (check the GitHub
-      file browser directly, not just your local `.gitignore`)
-- [ ] At least 10 commits with descriptive messages, visible in the
-      **Insights → Commits** tab
-- [ ] The **Actions** tab shows the CI workflow has run (it triggers
-      automatically on push)
-- [ ] README renders correctly on the repo's main page, including the
-      screenshots — broken image links usually mean the `docs/screenshots/`
-      files weren't committed
