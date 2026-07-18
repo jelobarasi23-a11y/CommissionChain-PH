@@ -14,6 +14,7 @@ testutils = ["soroban-sdk/testutils"]
 
 [dependencies]
 soroban-sdk = "=21.1.1"
+ethnum = "=1.5.3"
 
 [dev-dependencies]
 soroban-sdk = { version = "=21.1.1", features = ["testutils"] }
@@ -31,6 +32,3 @@ strip = "symbols"
 [profile.release-with-logs]
 inherits = "release"
 debug-assertions = true
-
-[patch.crates-io]
-   ethnum = "1.5.3"
