@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Dark fintech palette ─────────────────────────────────────────
+       Deep navy midnight background, vibrant emerald primary (growth /
+       money), warm amber gold (Philippine sun / pending), coral red
+       (rejected). Everything lives on dark surfaces so that glowing
+       accent colours actually pop. */
+
+    --night:          228 36% 8%;      /* #0C1020  page background    */
+    --surface:        226 32% 12%;     /* #151D2E  card surface        */
+    --surface-raised: 224 30% 17%;     /* #1D2640  hover / elevated   */
+    --primary:        162 100% 41%;    /* #00D196  emerald-teal CTA   */
+    --primary-dim:    162 60%  26%;    /* muted primary for bg tints  */
+    --gold:           38  95%  55%;    /* #F5A623  amber / pending    */
+    --gold-dim:       38  60%  20%;    /* muted gold for bg tints     */
+    --coral:          4   84%  60%;    /* #ED4C3A  rejected / error   */
+    --coral-dim:      4   60%  22%;    /* muted coral for bg tints    */
+    --text:           215 50%  95%;    /* #E8EFFC  primary text       */
+    --text-muted:     218 18%  58%;    /* #87939F  secondary text     */
+    --edge:           226 28%  18%;    /* #1E2A40  subtle borders     */
+    --edge-bright:    226 28%  26%;    /* #2A3A54  hover borders      */
+
+    /* shadcn-compatible semantic tokens */
+    --background:          var(--night);
+    --foreground:          var(--text);
+
+    --card:                var(--surface);
+    --card-foreground:     var(--text);
+
+    --primary:             162 100% 41%;
+    --primary-foreground:  228 36% 8%;
+
+    --secondary:           var(--surface-raised);
+    --secondary-foreground: var(--text);
+
+    --muted:               226 28% 15%;
+    --muted-foreground:    var(--text-muted);
+
+    --accent:              var(--gold);
+    --accent-foreground:   228 36% 8%;
+
+    --destructive:         var(--coral);
+    --destructive-foreground: 215 50% 95%;
+
+    --border:   var(--edge);
+    --input:    var(--edge);
+    --ring:     162 100% 41%;
+
+    --radius: 0.625rem;
+  }
+
+  * { @apply border-border; }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "tnum" 1;
+    /* Subtle animated gradient background — two faint glow orbs that
+       drift slowly, giving depth without competing with content. */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -10%,  hsl(162 100% 41% / 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, hsl(38  95%  55% / 0.05) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  .font-mono { font-feature-settings: "tnum" 1; }
+
+  /* Scrollbar — keep the dark feel */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: hsl(var(--night)); }
+  ::-webkit-scrollbar-thumb  { background: hsl(var(--edge-bright)); border-radius: 3px; }
+}
+
+@layer components {
+  /* ── Glass card surface ──────────────────────────────────────────── */
+  .glass {
+    background: hsl(var(--surface) / 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--edge));
+  }
+  .glass:hover {
+    border-color: hsl(var(--edge-bright));
+  }
+
+  /* ── Gradient text utility ───────────────────────────────────────── */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(162 80% 65%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Glow button effect ──────────────────────────────────────────── */
+  .btn-glow {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    transition: box-shadow 200ms ease;
+  }
+  .btn-glow:hover:not(:disabled) {
+    box-shadow: 0 0 20px 2px hsl(var(--primary) / 0.35);
+  }
+  .btn-glow-gold:hover:not(:disabled) {
+    box-shadow: 0 0 20px 2px hsl(var(--gold) / 0.35);
+  }
+
+  /* ── Status stamps ───────────────────────────────────────────────── */
+  .stamp {
+    @apply relative inline-flex items-center justify-center select-none;
+    width: 6.5rem;
+    height: 6.5rem;
+    border-radius: 9999px;
+    transform: rotate(-9deg);
+    font-family: var(--font-mono), monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .stamp::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+  }
+  .stamp::after {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+  }
+
+  .stamp-pending {
+    color: hsl(var(--gold));
+    filter: drop-shadow(0 0 6px hsl(var(--gold) / 0.4));
+  }
+  .stamp-pending::before { border-style: dashed; }
+
+  .stamp-approved {
+    color: hsl(var(--primary));
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.4));
+  }
+
+  .stamp-rejected {
+    color: hsl(var(--coral));
+    filter: drop-shadow(0 0 6px hsl(var(--coral) / 0.3));
+  }
+
+  .stamp-claimed {
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.12);
+    filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.5));
+  }
+  .stamp-claimed::before,
+  .stamp-claimed::after { border-color: hsl(var(--primary)); }
+
+  .stamp-sm {
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+  .stamp-sm::after { inset: 4px; }
+}
+
+@layer utilities {
+  /* ── Stamp success pop animation ─────────────────────────────────── */
+  @keyframes stamp-pop {
+    0%   { transform: scale(0.5) rotate(-9deg); opacity: 0; }
+    60%  { transform: scale(1.08) rotate(-9deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-9deg); opacity: 1; }
+  }
+  .animate-stamp-pop {
+    animation: stamp-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ── Shimmer loading skeleton ────────────────────────────────────── */
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--surface)) 25%,
+      hsl(var(--surface-raised)) 50%,
+      hsl(var(--surface)) 75%
+    );
+    background-size: 400px 100%;
+    animation: shimmer 1.4s infinite;
+  }
+
+  /* ── Floating glow orb (decorative, used in hero) ────────────────── */
+  @keyframes float-orb {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%       { transform: translateY(-12px) scale(1.03); }
+  }
+  .animate-float { animation: float-orb 6s ease-in-out infinite; }
+
+  /* Stat card accent stripe colours */
+  .stripe-teal   { background: linear-gradient(90deg, hsl(var(--primary)), hsl(162 80% 65%)); }
+  .stripe-gold   { background: linear-gradient(90deg, hsl(var(--gold)), hsl(38 95% 72%)); }
+  .stripe-coral  { background: linear-gradient(90deg, hsl(var(--coral)), hsl(4 84% 75%)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  @keyframes ping-slow {
+    75%, 100% { transform: scale(1.8); opacity: 0; }
+  }
+  .animate-ping-slow {
+    animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}

@@ -1,0 +1,22 @@
+# --- Node / Next.js (web/) ------------------------------------------------
+web/node_modules/
+web/.next/
+web/out/
+web/.env
+web/.env.local
+web/.env.*.local
+web/npm-debug.log*
+web/.DS_Store
+web/coverage/
+web/.vitest-cache/
+
+# --- Rust / Soroban (contracts/) -------------------------------------------
+contracts/**/target/
+
+# --- Editors / OS ------------------------------------------------------------
+.DS_Store
+.vscode/
+.idea/
+web/tsconfig.tsbuildinfo
+/package-lock.json
+*.tsbuildinfo
