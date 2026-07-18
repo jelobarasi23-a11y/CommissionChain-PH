@@ -31,3 +31,6 @@ strip = "symbols"
 [profile.release-with-logs]
 inherits = "release"
 debug-assertions = true
+
+[patch.crates-io]
+   ethnum = "1.5.3"
