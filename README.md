@@ -10,7 +10,7 @@ freelance sales agents, built on Stellar and Soroban.
 
 **🔗 Live demo:** [commissionchain-ph.vercel.app](https://commissionchain-ph.vercel.app)
 
-## The problem
+## The Problem
 
 Insurance agencies, real-estate brokerages, recruitment firms, solar
 installers, and marketing agencies across the Philippines run on
@@ -21,7 +21,7 @@ gets around to it. The agent has no record they can point to, no
 visibility into approval status, and no way to know a payout is actually
 coming until it shows up.
 
-## The solution
+## The Solution
 
 CommissionChain PH puts the whole referral-to-payout lifecycle on Stellar:
 
@@ -406,6 +406,14 @@ without a page refresh.
 - TypeScript type-check (`tsc --noEmit`)
 - Frontend test suite (`npm test`)
 - Next.js production build
+
+## 🎥 Demo Video
+
+Watch the CommissionChain PH demo:
+
+[![CommissionChain PH Demo](https://img.youtube.com/vi/rp-Fvr8xtug/maxresdefault.jpg)](https://youtu.be/rp-Fvr8xtug)
+
+▶️ **[Watch the Demo Video on YouTube](https://youtu.be/rp-Fvr8xtug)**
 
 ## Deployment automation
 
