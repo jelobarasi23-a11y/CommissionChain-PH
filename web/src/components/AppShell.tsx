@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Sidebar, MobileSidebarDrawer } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { FeedbackWidget } from "./FeedbackWidget";
 
 /**
  * Overall page shell: persistent left Sidebar on desktop, a slim TopBar
@@ -23,6 +24,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <TopBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
         <main className="flex-1">{children}</main>
       </div>
+
+      <FeedbackWidget />
     </div>
   );
 }
