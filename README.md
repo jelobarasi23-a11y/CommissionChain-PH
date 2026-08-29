@@ -74,6 +74,9 @@ Next.js 15 frontend  ──fetch──▶  Next.js API routes  ──build/submi
 | Blockchain | Stellar Testnet, Soroban smart contracts |
 | Database | PostgreSQL via Supabase (`@supabase/supabase-js`, no ORM) |
 | Smart contract | Rust + `soroban-sdk` |
+| Monitoring | Vercel Analytics, Vercel Speed Insights |
+| User feedback | Google Forms (embedded in-app) |
+| Admin auth | Signed session cookie (Web Crypto), gates `/admin` only |
 
 ## Repository layout
 
@@ -133,6 +136,12 @@ and put them in `.env` as `SUPABASE_URL` / `SUPABASE_SECRET_KEY`. The
 Stellar testnet values in `.env.example` already work as-is; you'll fill
 in `NEXT_PUBLIC_REFERRAL_CONTRACT_ID` after deploying the contract in
 step 3.
+
+Also set `ADMIN_PASSWORD` to any value only you know — it gates the
+owner-only `/admin` monitoring dashboard (see
+[Admin monitoring dashboard](#admin-monitoring-dashboard) below). Add the
+same variable to your Vercel project's environment settings before
+deploying, or `/admin` will refuse to let anyone in, including you.
 
 ### 3. Build and deploy the smart contract
 
@@ -340,6 +349,20 @@ One referral (Maria Santos, on-chain id `#2`), taken through its full lifecycle 
 
 ---
 
+### 10. Analytics & monitoring dashboard (Level 4)
+
+![Vercel Analytics dashboard showing page views and visitor traffic](docs/screenshots/16-analytics-dashboard.png)
+
+*Screenshot pending — capture from the Vercel project dashboard's Analytics tab once the deployed URL has accumulated some real traffic.*
+
+### 11. User feedback collection & summary (Level 4)
+
+![Embedded feedback form and the auto-generated Google Forms response summary](docs/screenshots/17-feedback-summary.png)
+
+*Screenshot pending — capture the embedded feedback modal in the running app, plus the Form's Responses tab once real users have submitted feedback.*
+
+---
+
 ### On-Chain Transaction Proof
 
 Every action below is a real, signed Soroban contract invocation submitted to Stellar Testnet — verifiable on Stellar Expert.
@@ -385,6 +408,38 @@ whichever wallet is connected, so every transaction-signing call site in
 the app (`ReferralForm`, `ReferralTable`, the Send XLM page) works
 identically regardless of which wallet the user picked.
 
+## Design system
+
+The UI runs on a centralized, token-based dark design system rather than
+one-off component styling — every color is a CSS custom property in
+`src/app/globals.css`, exposed as Tailwind utilities via
+`tailwind.config.ts`, so the whole app re-themes from one place.
+
+- **Brand colors:** Commission Teal `#00D9B5` (primary/CTA/success),
+  Stellar Blue `#1685FF` (links/secondary emphasis), Chain Purple
+  `#6C3BFF` (gradient accents) — combined into one 135° brand gradient
+  used for primary buttons, the sidebar logo mark, and gradient headings.
+- **Backgrounds** step through three navy tiers: Deep Navy `#070A12`
+  (page), Surface Navy `#0D111C` (cards/sidebar/nav), Elevated Surface
+  `#141925` (inputs/modals/dropdowns).
+- **Text** follows a four-tier hierarchy (primary/secondary/muted/
+  disabled) and **borders** a three-tier hierarchy (default/subtle/
+  active-teal on focus).
+- Referral-status colors — amber for pending, coral for rejected/error —
+  are unchanged from the original palette. They're functional status
+  indicators tied to on-chain referral state, not decorative branding.
+
+## Data integrity & fraud prevention
+
+Before an agent signs (and pays a network fee for) a `create_referral`
+transaction, `src/app/api/referrals/create/route.ts` checks whether the
+same business already has a *pending or approved* referral for the same
+client name, and rejects the submission with a clear error if so. A
+referral that was already rejected or claimed doesn't block a fresh
+one — only an unresolved duplicate does. This catches accidental
+double-submissions before they cost a network fee, and keeps a
+business's review queue free of duplicate entries.
+
 ## Real-time contract events
 
 Every state-changing contract function — `create_referral`,
@@ -398,6 +453,27 @@ dashboard (`src/components/ContractEventFeed.tsx`) — updating
 automatically when any user takes an action on the deployed contract,
 without a page refresh.
 
+## Admin monitoring dashboard
+
+A password-gated `/admin` view, separate from the rest of the app and
+never linked from it, gives the project owner a read-only snapshot of
+what's actually in the database: total businesses and referrals, a live
+distinct-wallet count (pulled from `transactions.source_key` — the real
+"how many real users so far" number), a status breakdown, and recent
+referral/business tables.
+
+- `src/middleware.ts` checks a signed session cookie before allowing any
+  `/admin/*` request through, redirecting to `/admin/login` otherwise.
+- One shared password (`ADMIN_PASSWORD` in `.env`) rather than full user
+  accounts — an appropriate trade-off for a single-operator view over
+  data that isn't itself financial-account-sensitive. Actual fund
+  movement still requires a real wallet signature on-chain regardless of
+  this gate.
+- `src/lib/adminAuth.ts` signs the session using the Web Crypto API
+  (`crypto.subtle`) rather than Node's `crypto` module, so the same
+  verification code runs correctly in both the Edge-runtime middleware
+  and the Node-runtime login API route with no extra configuration.
+
 ## CI/CD
 
 `.github/workflows/ci.yml` runs on every push and pull request:
@@ -406,6 +482,22 @@ without a page refresh.
 - TypeScript type-check (`tsc --noEmit`)
 - Frontend test suite (`npm test`)
 - Next.js production build
+
+## Monitoring & user feedback
+
+- **Vercel Analytics** and **Vercel Speed Insights** are wired into the
+  root layout (`src/app/layout.tsx`) — zero-config, since the app is
+  already deployed on Vercel. Beyond pageviews and Core Web Vitals, real
+  product events fire the moment each action actually succeeds (never
+  speculatively): `wallet_connected`, `referral_submitted`,
+  `referral_approved`, `referral_rejected`, `commission_claimed`, and
+  `feedback_opened`.
+- **User feedback** is collected through a Google Form embedded in a
+  modal, reachable from a floating "Feedback" button present on every
+  page (`src/components/FeedbackWidget.tsx`). Google Forms' own
+  Responses tab auto-generates a summary (average rating, per-question
+  distribution) — used directly as the feedback-summary proof rather
+  than hand-writing one.
 
 ## 🎥 Demo Video
 
