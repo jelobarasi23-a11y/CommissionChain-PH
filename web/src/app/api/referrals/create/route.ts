@@ -42,6 +42,42 @@ export async function POST(req: NextRequest) {
     }
 
     if (step === "build") {
+      // Duplicate-referral guard (Level 4 fraud-control requirement): block
+      // submitting the same client to a business that already has an
+      // in-flight (pending or approved) referral for them, before the
+      // agent even signs a transaction and pays a network fee for it. A
+      // referral that was already rejected or claimed doesn't block a
+      // fresh one — only an unresolved duplicate does.
+      const normalizedClientName = clientName.trim();
+      const { data: existingBusiness } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("public_key", businessPublicKey)
+        .maybeSingle();
+
+      if (existingBusiness) {
+        const { data: duplicate, error: dupError } = await supabase
+          .from("referrals")
+          .select("id")
+          .eq("business_id", existingBusiness.id)
+          .ilike("client_name", normalizedClientName)
+          .in("status", ["PENDING", "APPROVED"])
+          .maybeSingle();
+
+        if (dupError) {
+          return NextResponse.json({ error: `Database read failed: ${dupError.message}` }, { status: 500 });
+        }
+        if (duplicate) {
+          return NextResponse.json(
+            {
+              error:
+                "This client already has an active referral with this business. Wait for it to be approved/rejected before submitting another.",
+            },
+            { status: 409 }
+          );
+        }
+      }
+
       const xdr = await buildCreateReferralXdr({
         agentPublicKey,
         businessPublicKey,

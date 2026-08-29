@@ -4,25 +4,41 @@
 
 @layer base {
   :root {
-    /* ── Dark fintech palette ─────────────────────────────────────────
-       Deep navy midnight background, vibrant emerald primary (growth /
-       money), warm amber gold (Philippine sun / pending), coral red
-       (rejected). Everything lives on dark surfaces so that glowing
-       accent colours actually pop. */
+    /* ── Brand design system (teal / blue / purple on deep navy) ──────
+       Commission Teal is the primary brand + success color, Stellar Blue
+       covers links/secondary emphasis, Chain Purple is reserved for
+       gradient accents and decorative highlights. Backgrounds step
+       through three navy tiers (page -> card/nav -> elevated/inputs/
+       modals), text through four tiers (primary -> secondary -> muted
+       metadata -> disabled), and borders through three tiers (default ->
+       subtle -> active/focus, which is brand teal). Amber (pending) and
+       coral (rejected/error) stay as-is — they're functional referral-
+       status colors, not decoration, and read cleanly against the
+       cooler brand palette without clashing. */
 
-    --night:          228 36% 8%;      /* #0C1020  page background    */
-    --surface:        226 32% 12%;     /* #151D2E  card surface        */
-    --surface-raised: 224 30% 17%;     /* #1D2640  hover / elevated   */
-    --primary:        162 100% 41%;    /* #00D196  emerald-teal CTA   */
-    --primary-dim:    162 60%  26%;    /* muted primary for bg tints  */
-    --gold:           38  95%  55%;    /* #F5A623  amber / pending    */
-    --gold-dim:       38  60%  20%;    /* muted gold for bg tints     */
-    --coral:          4   84%  60%;    /* #ED4C3A  rejected / error   */
-    --coral-dim:      4   60%  22%;    /* muted coral for bg tints    */
-    --text:           215 50%  95%;    /* #E8EFFC  primary text       */
-    --text-muted:     218 18%  58%;    /* #87939F  secondary text     */
-    --edge:           226 28%  18%;    /* #1E2A40  subtle borders     */
-    --edge-bright:    226 28%  26%;    /* #2A3A54  hover borders      */
+    --night:           224 44% 5%;     /* #070A12  page background         */
+    --surface:         224 37% 8%;     /* #0D111C  card / sidebar / nav    */
+    --surface-raised:  222 30% 11%;    /* #141925  inputs / modals / elevated */
+
+    --primary:         170 100% 43%;   /* #00D9B5  Commission Teal         */
+    --primary-dim:     170 60%  26%;   /* muted teal for bg tints          */
+    --blue:            211 100% 54%;   /* #1685FF  Stellar Blue            */
+    --purple:          255 100% 62%;   /* #6C3BFF  Chain Purple            */
+
+    --gold:            38  95%  55%;   /* #F5A623  amber / pending status  */
+    --gold-dim:        38  60%  20%;   /* muted gold for bg tints          */
+    --coral:           4   84%  60%;   /* #ED4C3A  rejected / error        */
+    --coral-dim:       4   60%  22%;   /* muted coral for bg tints         */
+
+    --text:            210 40%  98%;   /* #F8FAFC  primary text            */
+    --text-muted:      215 20%  65%;   /* #94A3B8  secondary text          */
+    --text-faint:      215 16%  47%;   /* #64748B  muted / metadata text   */
+    --text-disabled:   215 19%  35%;   /* #475569  disabled text           */
+
+    --edge:            217 33%  17%;   /* #1E293B  default border          */
+    --edge-subtle:     221 38%  15%;   /* #172033  subtle border           */
+    --edge-bright:     215 25%  27%;   /* #334155  neutral hover border    */
+    --edge-active:     170 100% 43%;   /* #00D9B5  active / focus border   */
 
     /* shadcn-compatible semantic tokens */
     --background:          var(--night);
@@ -31,24 +47,23 @@
     --card:                var(--surface);
     --card-foreground:     var(--text);
 
-    --primary:             162 100% 41%;
-    --primary-foreground:  228 36% 8%;
+    --primary-foreground:  var(--night);
 
     --secondary:           var(--surface-raised);
     --secondary-foreground: var(--text);
 
-    --muted:               226 28% 15%;
+    --muted:               var(--surface-raised);
     --muted-foreground:    var(--text-muted);
 
     --accent:              var(--gold);
-    --accent-foreground:   228 36% 8%;
+    --accent-foreground:   var(--night);
 
     --destructive:         var(--coral);
-    --destructive-foreground: 215 50% 95%;
+    --destructive-foreground: var(--text);
 
     --border:   var(--edge);
     --input:    var(--edge);
-    --ring:     162 100% 41%;
+    --ring:     var(--primary);
 
     --radius: 0.625rem;
   }
@@ -59,10 +74,12 @@
     @apply bg-background text-foreground font-sans;
     font-feature-settings: "tnum" 1;
     /* Subtle animated gradient background — two faint glow orbs that
-       drift slowly, giving depth without competing with content. */
+       drift slowly, giving depth without competing with content. Teal
+       top-left, chain-purple bottom-right — a quiet echo of the main
+       brand gradient rather than a status color. */
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% -10%,  hsl(162 100% 41% / 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 110%, hsl(38  95%  55% / 0.05) 0%, transparent 60%);
+      radial-gradient(ellipse 80% 50% at 20% -10%,  hsl(var(--primary) / 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, hsl(var(--purple) / 0.05) 0%, transparent 60%);
     background-attachment: fixed;
   }
 
@@ -88,7 +105,7 @@
 
   /* ── Gradient text utility ───────────────────────────────────────── */
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(162 80% 65%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--blue)) 55%, hsl(var(--purple)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -202,7 +219,7 @@
   .animate-float { animation: float-orb 6s ease-in-out infinite; }
 
   /* Stat card accent stripe colours */
-  .stripe-teal   { background: linear-gradient(90deg, hsl(var(--primary)), hsl(162 80% 65%)); }
+  .stripe-teal   { background: linear-gradient(90deg, hsl(var(--primary)), hsl(170 80% 65%)); }
   .stripe-gold   { background: linear-gradient(90deg, hsl(var(--gold)), hsl(38 95% 72%)); }
   .stripe-coral  { background: linear-gradient(90deg, hsl(var(--coral)), hsl(4 84% 75%)); }
 }

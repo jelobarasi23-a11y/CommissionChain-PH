@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { track } from "@vercel/analytics";
 import { MessageSquarePlus, X } from "lucide-react";
 
 // Google Forms already gives a free "Responses" summary tab (average
@@ -71,7 +72,7 @@ export function FeedbackWidget() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); track("feedback_opened"); }}
         className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-white/8 bg-surface-raised px-4 py-2.5 text-xs font-semibold text-muted-foreground shadow-[0_8px_32px_-4px_rgba(0,0,0,0.5)] transition-colors hover:border-white/16 hover:text-foreground sm:bottom-6 sm:left-6"
       >
         <MessageSquarePlus className="h-4 w-4" />

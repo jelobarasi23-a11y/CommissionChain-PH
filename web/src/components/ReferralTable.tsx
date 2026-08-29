@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { track } from "@vercel/analytics";
 import { useWallet } from "./WalletProvider";
 import { ApprovalStamp } from "./ApprovalStamp";
 import { Button } from "./ui/button";
@@ -14,7 +15,7 @@ import type { Referral } from "@/lib/types";
 import {
   ExternalLink, Check, X, Banknote, Inbox,
   ChevronDown, ChevronRight, Clock, CheckCircle2,
-  XCircle, Coins, Zap,
+  XCircle, Coins, Zap, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,14 @@ const ACTION_SUCCESS: Record<Action, (r: Referral) => string> = {
   approve: (r) => `${formatAmount(r.commissionAmount)} is now in escrow for ${r.clientName}'s referral.`,
   reject:  (r) => `Declined ${r.clientName}'s referral.`,
   claim:   (r) => `${formatAmount(r.commissionAmount)} was sent straight to your wallet. 🎉`,
+};
+
+// Real product analytics events (Level 4 requirement) — fired only once
+// the on-chain action actually succeeds, never speculatively.
+const ACTION_EVENT: Record<Action, string> = {
+  approve: "referral_approved",
+  reject:  "referral_rejected",
+  claim:   "commission_claimed",
 };
 
 const TX_TYPE_ICON: Record<string, React.ElementType> = {
@@ -164,6 +173,7 @@ export function ReferralTable({
       await runAction(action, referral.onChainId, address, setStage, signXdr);
       setStage("success");
       showToast(ACTION_SUCCESS[action](referral), "success");
+      track(ACTION_EVENT[action], { referralId: String(referral.onChainId) });
       if (action === "claim") {
         setConfetti(true);
         window.setTimeout(() => setConfetti(false), 4000);
@@ -186,6 +196,7 @@ export function ReferralTable({
       await runAction(action, referral.onChainId, address, setStage, signXdr);
       setStage("success");
       showToast(ACTION_SUCCESS[action](referral), "success");
+      track(ACTION_EVENT[action], { referralId: String(referral.onChainId) });
       if (action === "claim") {
         setConfetti(true);
         window.setTimeout(() => setConfetti(false), 4000);
@@ -211,6 +222,17 @@ export function ReferralTable({
   return (
     <>
       <ConfettiOverlay trigger={confetti} />
+
+      {referrals.some((r) => getViewerRole(r, address) === "business" && r.status === "PENDING") && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-surface-raised px-3 py-2.5 text-xs text-muted-foreground">
+          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-text-faint" aria-hidden />
+          <p>
+            Approving a referral is your confirmation that this sale actually happened — the
+            blockchain escrows the payout, but it can&apos;t verify the sale itself. This business
+            profile has not been independently verified by CommissionChain PH.
+          </p>
+        </div>
+      )}
 
       {/* Desktop / tablet — full table, hidden below md breakpoint */}
       <div className="hidden md:block overflow-x-auto">

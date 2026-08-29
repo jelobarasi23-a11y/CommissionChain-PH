@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@vercel/analytics";
 import { useWallet } from "./WalletProvider";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -60,6 +61,7 @@ export function ReferralForm() {
       const submitData = await submitRes.json();
       if (!submitRes.ok) throw new Error(submitData.error ?? "Failed to submit transaction.");
 
+      track("referral_submitted");
       setStage("success");
       window.setTimeout(() => router.push("/referrals"), 1200);
     } catch (err) {

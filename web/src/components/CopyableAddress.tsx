@@ -31,6 +31,7 @@ export function CopyableAddress({
       type="button"
       onClick={handleCopy}
       title={copied ? "Copied!" : `Copy: ${address}`}
+      aria-label={copied ? "Address copied" : "Copy full address"}
       className={cn(
         "inline-flex items-center gap-1 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground",
         className
