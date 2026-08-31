@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { CopyableAddress } from "./CopyableAddress";
 import { TransactionOverlay, type TxStage } from "./TransactionOverlay";
 import { ConfettiOverlay } from "./ConfettiOverlay";
+import { ApprovalGuidance } from "./ApprovalGuidance";
 import { useToast } from "./Toast";
 import { formatAmount, formatDate, explorerTxUrl } from "@/lib/format";
 import { getViewerRole, statusCaption } from "@/lib/status";
@@ -15,7 +16,7 @@ import type { Referral } from "@/lib/types";
 import {
   ExternalLink, Check, X, Banknote, Inbox,
   ChevronDown, ChevronRight, Clock, CheckCircle2,
-  XCircle, Coins, Zap, Info,
+  XCircle, Coins, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -224,14 +225,7 @@ export function ReferralTable({
       <ConfettiOverlay trigger={confetti} />
 
       {referrals.some((r) => getViewerRole(r, address) === "business" && r.status === "PENDING") && (
-        <div className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-surface-raised px-3 py-2.5 text-xs text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-text-faint" aria-hidden />
-          <p>
-            Approving a referral is your confirmation that this sale actually happened — the
-            blockchain escrows the payout, but it can&apos;t verify the sale itself. This business
-            profile has not been independently verified by CommissionChain PH.
-          </p>
-        </div>
+        <ApprovalGuidance />
       )}
 
       {/* Desktop / tablet — full table, hidden below md breakpoint */}
