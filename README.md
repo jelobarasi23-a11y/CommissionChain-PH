@@ -42,7 +42,10 @@ diagram and a step-by-step breakdown of each transaction,
 setup-to-demo walkthrough, [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for
 running the app locally and deploying it to Vercel, and
 [`docs/PITCH.md`](docs/PITCH.md) / [`docs/HACKATHON.md`](docs/HACKATHON.md)
-for the pitch materials and Stellar-fit rationale.
+for the pitch materials and Stellar-fit rationale. For feedback from the
+10 real users who tested the app, see [User Acceptance
+Testing](#user-acceptance-testing--10-real-users-level-4) under
+[Testing](#testing) below.
 
 ## Architecture at a glance
 
@@ -74,9 +77,6 @@ Next.js 15 frontend  ──fetch──▶  Next.js API routes  ──build/submi
 | Blockchain | Stellar Testnet, Soroban smart contracts |
 | Database | PostgreSQL via Supabase (`@supabase/supabase-js`, no ORM) |
 | Smart contract | Rust + `soroban-sdk` |
-| Monitoring | Vercel Analytics, Vercel Speed Insights |
-| User feedback | Google Forms (embedded in-app) |
-| Admin auth | Signed session cookie (Web Crypto), gates `/admin` only |
 
 ## Repository layout
 
@@ -136,12 +136,6 @@ and put them in `.env` as `SUPABASE_URL` / `SUPABASE_SECRET_KEY`. The
 Stellar testnet values in `.env.example` already work as-is; you'll fill
 in `NEXT_PUBLIC_REFERRAL_CONTRACT_ID` after deploying the contract in
 step 3.
-
-Also set `ADMIN_PASSWORD` to any value only you know — it gates the
-owner-only `/admin` monitoring dashboard (see
-[Admin monitoring dashboard](#admin-monitoring-dashboard) below). Add the
-same variable to your Vercel project's environment settings before
-deploying, or `/admin` will refuse to let anyone in, including you.
 
 ### 3. Build and deploy the smart contract
 
@@ -243,6 +237,62 @@ address shortening, explorer URL builders), the role/status caption logic
 that decides what each viewer sees and which buttons appear
 (`getViewerRole`, `statusCaption`), and the `ApprovalStamp` component's
 rendering across all four referral states.
+
+### User Acceptance Testing — 10 real users (Level 4)
+
+Beyond the automated suites above, the app was put in front of **10 real
+people** — not scripted judges — who each connected a wallet and worked
+through a referral end-to-end, then filled out a short feedback form:
+**[CommissionChain-PH User Feedback form](https://forms.gle/vhDdQcQWB1kJL3Vw7)**.
+All 10 responses were collected in a single day (August 31, 2026, GMT+8).
+
+**Who tested it:** 4 Students, 4 Freelancers, 2 Business Owners — the
+three Level 4 roles. **What they did:** all 10 connected a Freighter
+wallet, viewed a commission campaign, and submitted a referral; 8 of 10
+also checked commission status and/or opened a transaction hash on
+Stellar Expert.
+
+| Question | Result (n = 10) |
+|---|---|
+| Ease of connecting Freighter wallet (1–5) | **4.9 / 5** avg (9× rated 5, 1× rated 4) |
+| Clarity of what happens after connecting | 9 "Very clear", 1 "Clear" |
+| Problems connecting/using the wallet | 9 "No problems", 1 "Minor problem" |
+| Understanding how CommissionChain PH works (1–5) | **4.1 / 5** avg |
+| Ease of completing the assigned task (1–5) | **3.9 / 5** avg |
+| Clarity of commission status (1–5) | **3.9 / 5** avg |
+| Confidence using it for a real commission (1–5) | **3.8 / 5** avg |
+| Perceived usefulness for PH businesses/agents (1–5) | **3.9 / 5** avg |
+| Overall experience (1–5) | **3.9 / 5** avg |
+| Most useful feature | Pre-funded escrow (5 votes), Stellar wallet payments (3), Referral ownership tracking (2) |
+| Does pre-funded escrow build payout confidence? | 10/10 yes — 1 "significantly", 9 "somewhat" |
+| Would use it for real referral commissions | 9 "Definitely yes", 1 "Probably yes" |
+| Would recommend to another business/agent | 9 "Definitely yes", 1 "Probably yes" |
+| Consented to anonymous testimonial use | 10 / 10 |
+
+**In their own words** (quoted with the testers' consent, attributed by
+role only):
+
+> "I liked the design and the idea of having this in the Philippines
+> ecosystem." — Business Owner
+
+> "I liked the overall idea of having this as a tool to give ease for
+> businesses that are having a hard time managing their commissions or
+> referrals." — Freelancer
+
+> "This kind of system would help Filipinos manage the crypto side of
+> the ecosystem, especially for a business like the one I'm hoping to
+> start." — Student
+
+> "I like how this system is easy to use and easy to understand its
+> flow." — Freelancer
+
+**Known issue surfaced by testing:** 9 of the 10 testers — across all
+three roles — independently flagged the same problem in their "what
+should we improve" answer: a glitch when a business **approves** a
+referral ("the approval is having a glitch," "fix the error of approving
+the referrals," "the approval needs some maintenance"). That makes it
+the top-priority fix coming out of this round, ahead of the smaller
+UI/design-polish requests a couple of testers also mentioned.
 
 ## Deployment
 
@@ -349,20 +399,6 @@ One referral (Maria Santos, on-chain id `#2`), taken through its full lifecycle 
 
 ---
 
-### 10. Analytics & monitoring dashboard (Level 4)
-
-![Vercel Analytics dashboard showing page views and visitor traffic](docs/screenshots/16-analytics-dashboard.png)
-
-*Screenshot pending — capture from the Vercel project dashboard's Analytics tab once the deployed URL has accumulated some real traffic.*
-
-### 11. User feedback collection & summary (Level 4)
-
-![Embedded feedback form and the auto-generated Google Forms response summary](docs/screenshots/17-feedback-summary.png)
-
-*Screenshot pending — capture the embedded feedback modal in the running app, plus the Form's Responses tab once real users have submitted feedback.*
-
----
-
 ### On-Chain Transaction Proof
 
 Every action below is a real, signed Soroban contract invocation submitted to Stellar Testnet — verifiable on Stellar Expert.
@@ -408,38 +444,6 @@ whichever wallet is connected, so every transaction-signing call site in
 the app (`ReferralForm`, `ReferralTable`, the Send XLM page) works
 identically regardless of which wallet the user picked.
 
-## Design system
-
-The UI runs on a centralized, token-based dark design system rather than
-one-off component styling — every color is a CSS custom property in
-`src/app/globals.css`, exposed as Tailwind utilities via
-`tailwind.config.ts`, so the whole app re-themes from one place.
-
-- **Brand colors:** Commission Teal `#00D9B5` (primary/CTA/success),
-  Stellar Blue `#1685FF` (links/secondary emphasis), Chain Purple
-  `#6C3BFF` (gradient accents) — combined into one 135° brand gradient
-  used for primary buttons, the sidebar logo mark, and gradient headings.
-- **Backgrounds** step through three navy tiers: Deep Navy `#070A12`
-  (page), Surface Navy `#0D111C` (cards/sidebar/nav), Elevated Surface
-  `#141925` (inputs/modals/dropdowns).
-- **Text** follows a four-tier hierarchy (primary/secondary/muted/
-  disabled) and **borders** a three-tier hierarchy (default/subtle/
-  active-teal on focus).
-- Referral-status colors — amber for pending, coral for rejected/error —
-  are unchanged from the original palette. They're functional status
-  indicators tied to on-chain referral state, not decorative branding.
-
-## Data integrity & fraud prevention
-
-Before an agent signs (and pays a network fee for) a `create_referral`
-transaction, `src/app/api/referrals/create/route.ts` checks whether the
-same business already has a *pending or approved* referral for the same
-client name, and rejects the submission with a clear error if so. A
-referral that was already rejected or claimed doesn't block a fresh
-one — only an unresolved duplicate does. This catches accidental
-double-submissions before they cost a network fee, and keeps a
-business's review queue free of duplicate entries.
-
 ## Real-time contract events
 
 Every state-changing contract function — `create_referral`,
@@ -453,27 +457,6 @@ dashboard (`src/components/ContractEventFeed.tsx`) — updating
 automatically when any user takes an action on the deployed contract,
 without a page refresh.
 
-## Admin monitoring dashboard
-
-A password-gated `/admin` view, separate from the rest of the app and
-never linked from it, gives the project owner a read-only snapshot of
-what's actually in the database: total businesses and referrals, a live
-distinct-wallet count (pulled from `transactions.source_key` — the real
-"how many real users so far" number), a status breakdown, and recent
-referral/business tables.
-
-- `src/middleware.ts` checks a signed session cookie before allowing any
-  `/admin/*` request through, redirecting to `/admin/login` otherwise.
-- One shared password (`ADMIN_PASSWORD` in `.env`) rather than full user
-  accounts — an appropriate trade-off for a single-operator view over
-  data that isn't itself financial-account-sensitive. Actual fund
-  movement still requires a real wallet signature on-chain regardless of
-  this gate.
-- `src/lib/adminAuth.ts` signs the session using the Web Crypto API
-  (`crypto.subtle`) rather than Node's `crypto` module, so the same
-  verification code runs correctly in both the Edge-runtime middleware
-  and the Node-runtime login API route with no extra configuration.
-
 ## CI/CD
 
 `.github/workflows/ci.yml` runs on every push and pull request:
@@ -482,22 +465,6 @@ referral/business tables.
 - TypeScript type-check (`tsc --noEmit`)
 - Frontend test suite (`npm test`)
 - Next.js production build
-
-## Monitoring & user feedback
-
-- **Vercel Analytics** and **Vercel Speed Insights** are wired into the
-  root layout (`src/app/layout.tsx`) — zero-config, since the app is
-  already deployed on Vercel. Beyond pageviews and Core Web Vitals, real
-  product events fire the moment each action actually succeeds (never
-  speculatively): `wallet_connected`, `referral_submitted`,
-  `referral_approved`, `referral_rejected`, `commission_claimed`, and
-  `feedback_opened`.
-- **User feedback** is collected through a Google Form embedded in a
-  modal, reachable from a floating "Feedback" button present on every
-  page (`src/components/FeedbackWidget.tsx`). Google Forms' own
-  Responses tab auto-generates a summary (average rating, per-question
-  distribution) — used directly as the feedback-summary proof rather
-  than hand-writing one.
 
 ## 🎥 Demo Video
 
